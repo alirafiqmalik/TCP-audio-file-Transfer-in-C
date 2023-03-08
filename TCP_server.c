@@ -6,9 +6,10 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h> // read(), write(), close()
-#define MAX 80
+#define MAX 1025
 #define PORT 8080
 #define SA struct sockaddr
+
 
 
 void func(int sockfd)
@@ -17,50 +18,30 @@ void func(int sockfd)
 	// write(sockfd, buff, sizeof(buff));
 
 int count=0;
-while(count>MAX){
+
 	bzero(buff, MAX);
+for(int j=0;j<2;j++){	
 	for (int i = 0; i < MAX-1; i++)
 	{
-	buff[i]='t';	
+	buff[i]=0;	
 	}
+	buff[0]=124;
 	buff[MAX]='\n';
-	
 	write(sockfd, buff, sizeof(buff));
-	// count++;
-}
-	
-	// char buff[MAX];
-	// int n;
-	// // infinite loop for chat
-	// for (;;) {
-	// 	bzero(buff, MAX);
-
-	// 	// read the message from client and copy it in buffer
-	// 	read(connfd, buff, sizeof(buff));
-	// 	// print buffer which contains the client contents
-	// 	printf("From client: %s\t To client : ", buff);
-	// 	bzero(buff, MAX);
-	// 	n = 0;
-	// 	// copy server message in the buffer
-	// 	while ((buff[n++] = getchar()) != '\n')
-	// 		;
-
-	// 	// and send that buffer to client
-	// 	write(connfd, buff, sizeof(buff));
-
-	// 	// if msg contains "Exit" then server exit and chat ended.
-	// 	if (strncmp("exit", buff, 4) == 0) {
-	// 		printf("Server Exit...\n");
-	// 		break;
-	// 	}
-	// }
 }
 
+
+	write(sockfd, "endtrans", sizeof(buff));
+
+
+
+}
 // Driver function
 int main()
 {
 	int sockfd, connfd, len;
 	struct sockaddr_in servaddr, cli;
+
 
 	// socket create and verification
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
