@@ -6,31 +6,68 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h> // read(), write(), close()
-#define MAX 1025
+#define MAX 1024
 #define PORT 8080
 #define SA struct sockaddr
+
+FILE *source;
+int n;
+int count = 0;
+int written = 0;
 
 
 
 void func(int sockfd)
 {
+  // unsigned char buffer[MAX];
 	char buff[MAX];
-	// write(sockfd, buff, sizeof(buff));
 
-int count=0;
+    source = fopen("audio/audio1.m4a", "rb");
 
-	bzero(buff, MAX);
-for(int j=0;j<2;j++){	
-	for (int i = 0; i < MAX-1; i++)
-	{
-	buff[i]=0;	
-	}
-	buff[0]=124;
-	buff[MAX]='\n';
-	write(sockfd, buff, sizeof(buff));
-}
+    if (source) {
+        int counti=0;
+        while (!feof(source)) {
+            n = fread(buff, 1, MAX, source);
+            count += n;
+            printf("n = %d  %d\n", counti,n);
+            // fwrite(buffer, 1, n, destination);
+						
+						// strcpy(buff,buffer);
+						
+						// buff[MAX]=(unsigned int)counti%10;
+						// buff[MAX+1]=(unsigned int)(counti/10);
+						// buff[MAX]=counti;
+
+						write(sockfd, buff, sizeof(buff));
+						
+            counti+=1;
+						// if(counti==4){break;}
+        }
+        printf("%d bytes read from library and sent.\n", count);
+    } else {
+        printf("fail\n");
+    }
+
+    fclose(source);
 
 
+
+
+// 	char buff[MAX];
+// 	// write(sockfd, buff, sizeof(buff));
+
+// int count=0;
+
+// 	bzero(buff, MAX);
+// for(int j=0;j<2;j++){	
+// 	for (int i = 0; i < MAX-1; i++)
+// 	{
+// 	buff[i]=0;	
+// 	}
+// 	buff[0]=124;
+// 	buff[MAX]='\n';
+// 	write(sockfd, buff, sizeof(buff));
+// }
 	write(sockfd, "endtrans", sizeof(buff));
 
 
@@ -45,6 +82,15 @@ int main()
 
 	// socket create and verification
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
+int yes=1;
+//char yes='1'; // use this under Solaris
+
+if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
+    perror("setsockopt");
+    exit(1);
+}
+
 	if (sockfd == -1) {
 		printf("socket creation failed...\n");
 		exit(0);
@@ -56,6 +102,7 @@ int main()
 	// assign IP, PORT
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
 	servaddr.sin_port = htons(PORT);
 
 	// Binding newly created socket to given IP and verification
@@ -84,8 +131,10 @@ int main()
 	else
 		printf("server accept the client...\n");
 
-	// Function for chatting between client and server
+	// // Function for chatting between client and server
 	func(connfd);
+
+	
 
 	// After chatting close the socket
 	close(sockfd);

@@ -3,6 +3,8 @@
     "bitset": "c",
     "chrono": "c",
     "algorithm": "c",
-    "unistd.h": "c"
+    "unistd.h": "c",
+    "ratio": "c",
+    "sstream": "c"
   }
 }
