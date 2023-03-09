@@ -15,61 +15,34 @@ int n;
 int count = 0;
 int written = 0;
 
-
-
 void func(int sockfd)
 {
-  // unsigned char buffer[MAX];
 	char buff[MAX];
 
-    source = fopen("audio/audio1.m4a", "rb");
+	source = fopen("test_audio/audio.m4a", "rb");
 
-    if (source) {
-        int counti=0;
-        while (!feof(source)) {
-            n = fread(buff, 1, MAX, source);
-            count += n;
-            printf("n = %d  %d\n", counti,n);
-            // fwrite(buffer, 1, n, destination);
-						
-						// strcpy(buff,buffer);
-						
-						// buff[MAX]=(unsigned int)counti%10;
-						// buff[MAX+1]=(unsigned int)(counti/10);
-						// buff[MAX]=counti;
+	if (source)
+	{
+		int counti = 0;
+		while (!feof(source))
+		{
+			n = fread(buff, 1, MAX, source);
+			count += n;
+			printf("n = %d  %d\n", counti, n);
 
-						write(sockfd, buff, sizeof(buff));
-						
-            counti+=1;
-						// if(counti==4){break;}
-        }
-        printf("%d bytes read from library and sent.\n", count);
-    } else {
-        printf("fail\n");
-    }
+			write(sockfd, buff, sizeof(buff));
 
-    fclose(source);
-
-
-
-
-// 	char buff[MAX];
-// 	// write(sockfd, buff, sizeof(buff));
-
-// int count=0;
-
-// 	bzero(buff, MAX);
-// for(int j=0;j<2;j++){	
-// 	for (int i = 0; i < MAX-1; i++)
-// 	{
-// 	buff[i]=0;	
-// 	}
-// 	buff[0]=124;
-// 	buff[MAX]='\n';
-// 	write(sockfd, buff, sizeof(buff));
-// }
+			counti += 1;
+			// if(counti==4){break;}
+		}
+		printf("%d bytes read from library and sent.\n", count);
+		fclose(source);
+	}
+	else
+	{
+		printf("File Access Failed\n");
+	}
 	write(sockfd, "endtrans", sizeof(buff));
-
 
 
 }
@@ -79,19 +52,20 @@ int main()
 	int sockfd, connfd, len;
 	struct sockaddr_in servaddr, cli;
 
-
 	// socket create and verification
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-int yes=1;
-//char yes='1'; // use this under Solaris
+	int yes = 1;
+	// char yes='1'; // use this under Solaris
 
-if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
-    perror("setsockopt");
-    exit(1);
-}
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
+	{
+		perror("setsockopt");
+		exit(1);
+	}
 
-	if (sockfd == -1) {
+	if (sockfd == -1)
+	{
 		printf("socket creation failed...\n");
 		exit(0);
 	}
@@ -106,7 +80,8 @@ if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
 	servaddr.sin_port = htons(PORT);
 
 	// Binding newly created socket to given IP and verification
-	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {
+	if ((bind(sockfd, (SA *)&servaddr, sizeof(servaddr))) != 0)
+	{
 		printf("socket bind failed...\n");
 		exit(0);
 	}
@@ -114,7 +89,8 @@ if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
 		printf("Socket successfully binded..\n");
 
 	// Now server is ready to listen and verification
-	if ((listen(sockfd, 5)) != 0) {
+	if ((listen(sockfd, 5)) != 0)
+	{
 		printf("Listen failed...\n");
 		exit(0);
 	}
@@ -123,8 +99,9 @@ if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
 	len = sizeof(cli);
 
 	// Accept the data packet from client and verification
-	connfd = accept(sockfd, (SA*)&cli, &len);
-	if (connfd < 0) {
+	connfd = accept(sockfd, (SA *)&cli, &len);
+	if (connfd < 0)
+	{
 		printf("server accept failed...\n");
 		exit(0);
 	}
@@ -133,8 +110,6 @@ if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
 
 	// // Function for chatting between client and server
 	func(connfd);
-
-	
 
 	// After chatting close the socket
 	close(sockfd);

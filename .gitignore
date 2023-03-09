@@ -1,4 +1,5 @@
 TCP_client
 TCP_server
 test_audio
+.vscode
 tmpout/*
