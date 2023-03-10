@@ -6,77 +6,68 @@
 #include <strings.h> // bzero()
 #include <sys/socket.h>
 #include <unistd.h> // read(), write(), close()
+
 #define MAX 1024
-char *ip = "127.0.0.1";
+#define IP "127.0.0.1"
 #define PORT 8080
 #define SA struct sockaddr
 
 FILE *destination;
 
-void func(int sockfd)
-{
+void func(int sockfd) {
 	char buff[MAX];
 	int count = 0;
-	while (1)
-	{
+	while (1) {
 		read(sockfd, buff, sizeof(buff));
 		printf("From Server : %d  \n\n", count);
 
-		if (strcmp(buff, "endtrans") == 0)
-		{
+		if (strcmp(buff, "endtrans") == 0) {
 			break;
 		}
 
-		if (count == 1081)
+		if (count == 1081) {
 			fwrite(buff, 1, 436, destination);
-		else
+		} else {
 			fwrite(buff, 1, 1024, destination);
+		}
 
 		count += 1;
 	}
 }
 
-//
-
-int main()
-{
+int main() {
 	int sockfd, connfd;
 	struct sockaddr_in servaddr, cli;
 
 	// socket create and verification
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd == -1)
-	{
+	if (sockfd == -1) {
 		printf("socket creation failed...\n");
 		exit(0);
-	}
-	else
+	} else {
 		printf("Socket successfully created..\n");
+	}
 	bzero(&servaddr, sizeof(servaddr));
 
 	// assign IP, PORT
 	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr = inet_addr(ip);
+	servaddr.sin_addr.s_addr = inet_addr(IP);
 	servaddr.sin_port = htons(PORT);
 
 	// connect the client socket to server socket
-	if (connect(sockfd, (SA *)&servaddr, sizeof(servaddr)) != 0)
-	{
+	if (connect(sockfd, (SA *)&servaddr, sizeof(servaddr)) != 0) {
 		printf("connection with the server failed...\n");
 		exit(0);
-	}
-	else
+	} else {
 		printf("connected to the server..\n");
+	}
 
 	// function for chat
 	destination = fopen("tmpout/tmpout.m4a", "wb");
 
-	if (destination)
-	{
+	if (destination) {
 	func(sockfd);
-	}
-		else
-	{
+	} else {
 		printf("File Access Failed\n");
 	}
 

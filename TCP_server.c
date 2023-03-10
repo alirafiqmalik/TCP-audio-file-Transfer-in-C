@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h> // read(), write(), close()
+										//
 #define MAX 1024
 #define PORT 8080
 #define SA struct sockaddr
@@ -15,17 +16,14 @@ int n;
 int count = 0;
 int written = 0;
 
-void func(int sockfd)
-{
+void func(int sockfd) {
 	char buff[MAX];
 
 	source = fopen("test_audio/audio.m4a", "rb");
 
-	if (source)
-	{
+	if (source) {
 		int counti = 0;
-		while (!feof(source))
-		{
+		while (!feof(source)) {
 			n = fread(buff, 1, MAX, source);
 			count += n;
 			printf("n = %d  %d\n", counti, n);
@@ -37,18 +35,14 @@ void func(int sockfd)
 		}
 		printf("%d bytes read from library and sent.\n", count);
 		fclose(source);
-	}
-	else
-	{
+	} else {
 		printf("File Access Failed\n");
 	}
 	write(sockfd, "endtrans", sizeof(buff));
-
-
 }
+
 // Driver function
-int main()
-{
+int main() {
 	int sockfd, connfd, len;
 	struct sockaddr_in servaddr, cli;
 
@@ -58,19 +52,17 @@ int main()
 	int yes = 1;
 	// char yes='1'; // use this under Solaris
 
-	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
-	{
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
 		perror("setsockopt");
 		exit(1);
 	}
 
-	if (sockfd == -1)
-	{
+	if (sockfd == -1) {
 		printf("socket creation failed...\n");
 		exit(0);
-	}
-	else
+	} else {
 		printf("Socket successfully created..\n");
+	}
 	bzero(&servaddr, sizeof(servaddr));
 
 	// assign IP, PORT
@@ -80,26 +72,24 @@ int main()
 	servaddr.sin_port = htons(PORT);
 
 	// Binding newly created socket to given IP and verification
-	if ((bind(sockfd, (SA *)&servaddr, sizeof(servaddr))) != 0)
-	{
+	if ((bind(sockfd, (SA *)&servaddr, sizeof(servaddr))) != 0) {
 		printf("socket bind failed...\n");
 		exit(0);
-	}
-	else
+	} else {
 		printf("Socket successfully binded..\n");
+	}
 
 	// Now server is ready to listen and verification
-	if ((listen(sockfd, 5)) != 0)
-	{
+	if ((listen(sockfd, 5)) != 0) {
 		printf("Listen failed...\n");
 		exit(0);
-	}
-	else
+	} else {
 		printf("Server listening..\n");
+	}
 	len = sizeof(cli);
 
 	// Accept the data packet from client and verification
-	connfd = accept(sockfd, (SA *)&cli, &len);
+	connfd = accept(sockfd, (SA *)&cli, (socklen_t *) &len);
 	if (connfd < 0)
 	{
 		printf("server accept failed...\n");
@@ -107,10 +97,7 @@ int main()
 	}
 	else
 		printf("server accept the client...\n");
-
-	// // Function for chatting between client and server
-	func(connfd);
-
+// // Function for chatting between client and server func(connfd);
 	// After chatting close the socket
 	close(sockfd);
 }
