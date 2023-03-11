@@ -14,34 +14,39 @@
 
 FILE *destination;
 
-void func(int sockfd) {
+void func(int sockfd)
+{
 	char buff[MAX];
 	int count = 0;
-	while (1) {
+	while (1)
+	{
 		read(sockfd, buff, sizeof(buff));
-		printf("From Server : %d  \n\n", count);
+		printf("From Server : %d  \n", count);
 
-		if (strcmp(buff, "endtrans") == 0) {
+		if (strcmp(buff, "endtrans") == 0)
+		{
 			break;
 		}
 
-
-			fwrite(buff, 1, 1024, destination);
-
+		fwrite(buff, 1, MAX, destination);
 		count += 1;
 	}
 }
 
-int main() {
+int main()
+{
 	int sockfd, connfd;
 	struct sockaddr_in servaddr, cli;
 
 	// socket create and verification
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd == -1) {
+	if (sockfd == -1)
+	{
 		printf("socket creation failed...\n");
 		exit(0);
-	} else {
+	}
+	else
+	{
 		printf("Socket successfully created..\n");
 	}
 	bzero(&servaddr, sizeof(servaddr));
@@ -52,19 +57,20 @@ int main() {
 	servaddr.sin_port = htons(PORT);
 
 	// connect the client socket to server socket
-	if (connect(sockfd, (SA *)&servaddr, sizeof(servaddr)) != 0) {
+	if (connect(sockfd, (SA *)&servaddr, sizeof(servaddr)) != 0)
+	{
 		printf("connection with the server failed...\n");
 		exit(0);
-	} else {
+	}
+	else
+	{
 		printf("connected to the server..\n");
 	}
 
 	// function for chat
 	destination = fopen("tmpout/tmpout.m4a", "wb");
 
-
 	func(sockfd);
-
 
 	fclose(destination);
 	// close the socket
