@@ -5,6 +5,7 @@
 #include <string.h>
 #include <strings.h> // bzero()
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <unistd.h> // read(), write(), close()
 
 #define MAX 1024
@@ -12,9 +13,22 @@
 #define PORT 8080
 #define SA struct sockaddr
 
-FILE *destination;
+char *recv_msg(int sockfd) {
+	char buff[MAX];
+	char *tmp = NULL;
+	int nread;
 
-void func(int sockfd)
+	if ((nread = recv(sockfd, buff, sizeof(buff), 0)) > 0)
+	{
+		tmp = malloc(sizeof(char) * nread);
+		memcpy(tmp, buff, nread);
+		return tmp;
+	}
+
+	return NULL;
+}
+
+void read_file(int sockfd, FILE *fname)
 {
 	char buff[MAX];
 	int count = 0;
@@ -28,15 +42,34 @@ void func(int sockfd)
 			break;
 		}
 
-		fwrite(buff, 1, MAX, destination);
+		fwrite(buff, 1, MAX, fname);
 		count += 1;
 	}
 }
 
+void send_msg(int sockfd, const char *msg)
+{
+	char buff[MAX];
+	send(sockfd, msg, strlen(msg) + 1, 0);
+	printf("Message (%s) sent\n", msg);
+
+	strcpy(buff, "endtrans");
+	send(sockfd, buff, sizeof(buff), 0);
+}
+
+char *user_input() {
+	char buff[MAX];
+	printf("Enter a filename (or 'q' to exit): ");
+
+	char *ret = fgets(buff, MAX, stdin);
+
+	return ret;
+}
+
 int main()
 {
-	int sockfd, connfd;
-	struct sockaddr_in servaddr, cli;
+	int sockfd;
+	struct sockaddr_in servaddr;
 
 	// socket create and verification
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -67,12 +100,39 @@ int main()
 		printf("connected to the server..\n");
 	}
 
-	// function for chat
-	destination = fopen("tmpout/tmpout.m4a", "wb");
+	char *fname;
+	struct stat sb;
+	FILE *dest_fp = NULL;
+	while (1)
+	{
+		fname = user_input();
+		if (fname[0] == 'q') {
+			send_msg(sockfd, "q");
+			printf("Exiting...\n");
+			break;
+		}
 
-	func(sockfd);
+		printf("%s", fname);
+		if (stat(fname, &sb) == -1)
+		{
+			printf("File does not exist\n");
+			continue;
+		}
+		send_msg(sockfd, fname);
+		if (strcmp(recv_msg(sockfd), "exists") != 0)
+		{
+			printf("File does not exist on the server\n");
+			continue;
+		}
 
-	fclose(destination);
+		char dest_addr[MAX];
+		snprintf(dest_addr, MAX, "tmpout/%s", fname);
+		dest_fp = fopen(dest_addr, "rb");
+
+		read_file(sockfd, dest_fp);
+		fclose(dest_fp);
+	}
+
 	// close the socket
 	close(sockfd);
 }

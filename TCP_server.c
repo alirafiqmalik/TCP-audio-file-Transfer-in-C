@@ -6,24 +6,48 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h> // read(), write(), close()
-										//
+
 #define MAX 1024
 #define PORT 8080
 #define SA struct sockaddr
 
-FILE *source;
-int n;
-int count = 0;
-int written = 0;
+char *recv_msg(int sockfd) {
+	char buff[MAX];
+	char *tmp = NULL;
+	int nread;
 
-void func(int sockfd)
+	if ((nread = recv(sockfd, buff, sizeof(buff), 0)) > 0)
+	{
+		tmp = malloc(sizeof(char) * nread);
+		memcpy(tmp, buff, nread);
+		return tmp;
+	}
+
+	return NULL;
+}
+
+void send_msg(int sockfd, const char *msg)
 {
 	char buff[MAX];
+	send(sockfd, msg, strlen(msg) + 1, 0);
+	printf("Message (%s) sent\n", msg);
 
-	source = fopen("test_audio/audio2.m4a", "rb");
+	strcpy(buff, "endtrans");
+	send(sockfd, buff, sizeof(buff), 0);
+}
 
-	if (source)
+void send_file (int sockfd, const char *fname)
+{
+	int n;
+	int count = 0;
+	char buff[MAX];
+
+	FILE *source = fopen(fname, "rb");
+
+	if (source == NULL)
 	{
+		printf("File Access Failed\n");
+	} else {
 		int counti = 0;
 		while (!feof(source))
 		{
@@ -31,7 +55,7 @@ void func(int sockfd)
 			count += n;
 			printf("n = %d  %d\n", counti, n);
 
-			write(sockfd, buff, sizeof(buff));
+			send(sockfd, buff, sizeof(buff), 0);
 
 			counti += 1;
 			// if(counti==4){break;}
@@ -39,11 +63,10 @@ void func(int sockfd)
 		printf("%d bytes read from library and sent.\n", count);
 		fclose(source);
 	}
-	else
-	{
-		printf("File Access Failed\n");
-	}
-	write(sockfd, "endtrans", sizeof(buff));
+
+	
+	strcpy(buff, "endtrans");
+	send(sockfd, buff, sizeof(buff), 0);
 }
 
 // Driver function
@@ -112,9 +135,15 @@ int main()
 	}
 	else
 		printf("server accept the client...\n");
-	// // Function for chatting between client and server
+	// Function for chatting between client and server
+	char *fname = NULL;
+	while ((fname = recv_msg(connfd))[0] != 'q' && strlen(fname) != 1)
+	{
+		send_file(connfd, fname);
+		free(fname);
+	}
+	printf("Closing connection...\n");
 
-	func(connfd);
 	// After chatting close the socket
 	close(sockfd);
 }
