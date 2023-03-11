@@ -25,11 +25,8 @@ void func(int sockfd) {
 			break;
 		}
 
-		if (count == 1081) {
-			fwrite(buff, 1, 436, destination);
-		} else {
+
 			fwrite(buff, 1, 1024, destination);
-		}
 
 		count += 1;
 	}
@@ -65,11 +62,9 @@ int main() {
 	// function for chat
 	destination = fopen("tmpout/tmpout.m4a", "wb");
 
-	if (destination) {
+
 	func(sockfd);
-	} else {
-		printf("File Access Failed\n");
-	}
+
 
 	fclose(destination);
 	// close the socket

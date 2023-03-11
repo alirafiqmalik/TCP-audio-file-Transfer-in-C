@@ -19,7 +19,7 @@ int written = 0;
 void func(int sockfd) {
 	char buff[MAX];
 
-	source = fopen("test_audio/audio.m4a", "rb");
+	source = fopen("test_audio/audio2.m4a", "rb");
 
 	if (source) {
 		int counti = 0;
@@ -97,7 +97,10 @@ int main() {
 	}
 	else
 		printf("server accept the client...\n");
-// // Function for chatting between client and server func(connfd);
+// // Function for chatting between client and server 
+
+
+	func(connfd);
 	// After chatting close the socket
 	close(sockfd);
 }
