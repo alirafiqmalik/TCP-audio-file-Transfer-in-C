@@ -145,11 +145,13 @@ int main()
     fname = recv_msg(connfd);
 		if (fname[0] == 'q' && strlen(fname) == 1) 
 		{
+			free(fname);
 			break;
 		}
 
 		if (stat(fname, &sb) == -1)
 		{
+			free(fname);
 			send_msg(connfd, "dne");  // dne -> does not exist
 			continue;
 		}
@@ -160,5 +162,6 @@ int main()
 	printf("Closing connection...\n");
 
 	// After chatting close the socket
+	close(connfd);
 	close(sockfd);
 }
