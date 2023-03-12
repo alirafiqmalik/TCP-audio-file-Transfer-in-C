@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h> // read(), write(), close()
 
 #define MAX 1024
@@ -36,7 +37,7 @@ void send_msg(int sockfd, const char *msg)
 	send(sockfd, buff, sizeof(buff), 0);
 }
 
-void send_file (int sockfd, const char *fname)
+void send_file(int sockfd, const char *fname)
 {
 	int n;
 	int count = 0;
@@ -135,10 +136,24 @@ int main()
 	}
 	else
 		printf("server accept the client...\n");
+
 	// Function for chatting between client and server
-	char *fname = NULL;
-	while ((fname = recv_msg(connfd))[0] != 'q' && strlen(fname) != 1)
+	struct stat sb;
+	while (1)
 	{
+		char *fname = NULL;
+    fname = recv_msg(connfd);
+		if (fname[0] == 'q' && strlen(fname) == 1) 
+		{
+			break;
+		}
+
+		if (stat(fname, &sb) == -1)
+		{
+			send_msg(connfd, "dne");  // dne -> does not exist
+			continue;
+		}
+
 		send_file(connfd, fname);
 		free(fname);
 	}

@@ -5,7 +5,6 @@
 #include <string.h>
 #include <strings.h> // bzero()
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <unistd.h> // read(), write(), close()
 
 #define MAX 1024
@@ -47,11 +46,11 @@ void read_file(int sockfd, FILE *fname)
 	}
 }
 
-void send_msg(int sockfd, const char *msg)
+void send_msg(int sockfd, const char **msg)
 {
 	char buff[MAX];
-	send(sockfd, msg, strlen(msg) + 1, 0);
-	printf("Message (%s) sent\n", msg);
+	send(sockfd, *msg, strlen(*msg) + 1, 0);
+	printf("Message (%s) sent\n", *msg);
 
 	strcpy(buff, "endtrans");
 	send(sockfd, buff, sizeof(buff), 0);
@@ -63,6 +62,7 @@ char *user_input() {
 
 	char *ret = fgets(buff, MAX, stdin);
 
+	ret[strcspn(ret, "\r\n")] = '\0';
 	return ret;
 }
 
@@ -101,33 +101,33 @@ int main()
 	}
 
 	char *fname;
-	struct stat sb;
-	FILE *dest_fp = NULL;
 	while (1)
 	{
+		FILE *dest_fp = NULL;
+		char *tmp = NULL;
 		fname = user_input();
 		if (fname[0] == 'q') {
-			send_msg(sockfd, "q");
+			const char *q = "q";
+			send_msg(sockfd, &q);
 			printf("Exiting...\n");
 			break;
 		}
 
-		printf("%s", fname);
-		if (stat(fname, &sb) == -1)
-		{
-			printf("File does not exist\n");
-			continue;
-		}
-		send_msg(sockfd, fname);
-		if (strcmp(recv_msg(sockfd), "exists") != 0)
+		send_msg(sockfd, (const char **) &fname);
+		if (strcmp((tmp = recv_msg(sockfd)), "dne") == 0)
 		{
 			printf("File does not exist on the server\n");
 			continue;
 		}
+		free(tmp);
 
-		char dest_addr[MAX];
-		snprintf(dest_addr, MAX, "tmpout/%s", fname);
-		dest_fp = fopen(dest_addr, "rb");
+		char *dest_addr = "tmpout/tmp.m4a";
+		dest_fp = fopen(dest_addr, "wb");
+		if (dest_fp == NULL)
+		{
+			printf("Could not open destination file\n");
+			continue;
+		}
 
 		read_file(sockfd, dest_fp);
 		fclose(dest_fp);
